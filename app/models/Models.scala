@@ -1,13 +1,12 @@
 package models
 
-import play.api.{Logger, Play}
+import play.api.Play
 import org.joda.time.DateTime
 import models.mongoContext.context
 import com.mongodb.casbah.Imports._
-import com.mongodb.casbah.query.dsl._
 import com.mongodb.casbah.MongoURI
 import java.net.URL
-import com.novus.salat.dao.{ModelCompanion, SalatDAO}
+import com.novus.salat.dao._
 
 case class Author(
                    id: ObjectId = new ObjectId,
@@ -38,24 +37,35 @@ object Category extends ModelCompanion[Category, ObjectId] {
 case class Post(
                  id: ObjectId = new ObjectId,
                  title: String,
-                 author: Author,
+                 author_id: ObjectId,
                  created: DateTime,
-                 category: Category,
+                 category_id: ObjectId,
                  text: Option[String],
-                 link: Option[URL])
+                 link: Option[URL]) {
+  def author = Author.findOneById(author_id).get
+  def category = Category.findOneById(category_id).get
+  def commentCount = Post.dao.comments.countByParentId(id)
+}
 
 object Post extends ModelCompanion[Post, ObjectId] {
-  val dao = new SalatDAO[Post, ObjectId](collection = DB.mongoCollection("posts")) {}
+  val dao = new SalatDAO[Post, ObjectId](collection = DB.mongoCollection("posts")) {
+    val comments = new ChildCollection[Comment, Int](collection = DB.mongoCollection("comments"),
+      parentIdField = "post_id") {}
+  }
 
 }
 
 case class Comment(
                     id: ObjectId = new ObjectId,
-                    author: Author,
-                    text: String)
+                    post_id: ObjectId,
+                    author_id: ObjectId,
+                    text: String) {
+  def author = Author.findOneById(author_id).get
+}
 
 object Comment extends ModelCompanion[Comment, ObjectId] {
   val dao = new SalatDAO[Comment, ObjectId](collection = DB.mongoCollection("comments")) {}
+  def countCommentsOnPost(post_id: ObjectId) = 0
 }
 
 
