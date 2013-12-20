@@ -1,0 +1,32 @@
+@(message: String, posts: List[models.Post])
+
+@dateFormat(date: org.joda.time.DateTime) = {
+    @date.toString("HH:mm 'on' dd MMMM, YYYY")
+}
+
+    @sidebar = {
+        <h1>Category foo</h1>
+        <p>Some info about the category</p>
+    }
+
+@main("Welcome to Play")(sidebar) {
+                @for(post <- posts) {
+                <div class="row" style="margin-bottom: 15px">
+                    <div class="col-md-1" style="margin-top: 13px">
+                        <div class="btn-group-vertical">
+                        <button class="btn"><span class="glyphicon glyphicon-thumbs-up"></span> +1</button>
+                        <button class="btn" disabled="disabled">7</button>
+                        <button class="btn"><span class="glyphicon glyphicon-thumbs-down"></span> -1</button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <img width="128" height="128" src="http://www.gravatar.com/avatar/@post.author.gravatar ?s=128" />
+                    </div>
+                    <div class="col-md-9">
+                        <h2>@post.title <small>(@post.category.name)</small></h2>
+                        <p>@post.author.name at @dateFormat(post.created)</p>
+                        <p>7 comments</p>
+                    </div>
+                </div>
+                }
+}
