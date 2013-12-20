@@ -1,9 +1,9 @@
-@(message: String, posts: Iterator[Post])
+@(message: String, category: Category, posts: Iterator[Post])
 @import templateutils.Formatters._
 
     @sidebar = {
-        <h1>Front Page</h1>
-        <p>Some info about the front page</p>
+        <h1>Category @category.name</h1>
+        <p>Some info about the category</p>
     }
 
 @main("Welcome to Play")(sidebar) {
@@ -20,7 +20,7 @@
                         <img width="128" height="128" src="http://www.gravatar.com/avatar/@post.author.gravatar ?s=128" />
                     </div>
                     <div class="col-md-9">
-                        <h2><a href="/@post.category.path/@post.id">@post.title</a> <small>(<a href="/@post.category.path">@post.category.name</a>)</small></h2>
+                        <h2><a href="/@post.category.path/@post.id">@post.title</a> <small>(@post.category.name)</small></h2>
                         <p>@post.author.name at @dateFormat(post.created)</p>
                         <p>@post.commentCount comments</p>
                     </div>

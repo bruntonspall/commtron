@@ -7,6 +7,7 @@ import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.MongoURI
 import java.net.URL
 import com.novus.salat.dao._
+import scala.concurrent.Future
 
 case class Author(
                    id: ObjectId = new ObjectId,
@@ -41,10 +42,13 @@ case class Post(
                  created: DateTime,
                  category_id: ObjectId,
                  text: Option[String],
-                 link: Option[URL]) {
+                 link: Option[URL],
+                 path: String = "") {
+
   def author = Author.findOneById(author_id).get
   def category = Category.findOneById(category_id).get
   def commentCount = Post.dao.comments.countByParentId(id)
+  def comments = Post.dao.comments.findByParentId(id)
 }
 
 object Post extends ModelCompanion[Post, ObjectId] {
@@ -53,6 +57,9 @@ object Post extends ModelCompanion[Post, ObjectId] {
       parentIdField = "post_id") {}
   }
 
+  def findByCategory(category_id: ObjectId) = {
+    dao.find(MongoDBObject("category_id" -> category_id)).$orderby(MongoDBObject("created" -> -1)).limit(10)
+  }
 }
 
 case class Comment(
