@@ -51,7 +51,9 @@ case class Post(
                  category_id: ObjectId,
                  text: Option[String],
                  link: Option[URL],
-                 path: String = "") {
+                 path: String = "",
+                 votes_up: Long = 0,
+                 votes_down: Long = 0) {
 
   def author = Author.findOneById(author_id).get
 
@@ -60,6 +62,9 @@ case class Post(
   def commentCount = Post.dao.comments.countByParentId(id)
 
   def comments = Post.dao.comments.findByParentId(id)
+
+  def votes = votes_up - votes_down
+
 }
 
 object Post extends ModelCompanion[Post, ObjectId] {
@@ -78,8 +83,11 @@ case class Comment(
                     post_id: ObjectId,
                     author_id: ObjectId,
                     text: String,
-                    created: DateTime = DateTime.now) {
+                    created: DateTime = DateTime.now,
+                    votes_up: Long = 0,
+                    votes_down: Long = 0) {
   def author = Author.findOneById(author_id).get
+  def votes = votes_up - votes_down
 }
 
 object Comment extends ModelCompanion[Comment, ObjectId] {
