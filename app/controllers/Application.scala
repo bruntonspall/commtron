@@ -6,13 +6,15 @@ import scala.concurrent.Future
 import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.Logger
 
-object Application extends Controller {
-  def index = Action {
+object Application extends Controller with securesocial.core.SecureSocial {
+  def index = UserAwareAction { implicit request =>
+    Logger.info("Logged in as user: "+request.user)
     Ok(views.html.index("Index Page", Post.findAll()))
   }
 
-  def category(category: String) = Action.async {
+  def category(category: String) = UserAwareAction.async { implicit request =>
     val catQuery = Category.findByPath(category)
     for {
         catOpt <- catQuery
@@ -21,7 +23,7 @@ object Application extends Controller {
     } yield Ok(views.html.category("Category Page", cat, posts))
   }
 
-  def post(category: String, post: String) = Action.async {
+  def post(category: String, post: String) = UserAwareAction.async { implicit request =>
     val catQuery = Category.findByPath(category)
     for {
       catOpt <- catQuery
@@ -30,7 +32,7 @@ object Application extends Controller {
     } yield Ok(views.html.post("", cat, post))
   }
 
-  def postVote(post: String, direction: String) = Action.async { request =>
+  def postVote(post: String, direction: String) = UserAwareAction.async { implicit request =>
     for {
       post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
     } yield {
@@ -48,7 +50,7 @@ object Application extends Controller {
     }
 
   }
-  def commentVote(comment: String, direction: String) = Action.async { request =>
+  def commentVote(comment: String, direction: String) = UserAwareAction.async { implicit request =>
     for {
       comment <- Comment.findOneById(new ObjectId(comment)).map(Future.successful).getOrElse(Future.failed(new Exception))
     } yield {

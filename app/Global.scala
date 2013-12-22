@@ -7,7 +7,10 @@ import org.joda.time.DateTime
 import play.api._
 import libs.ws.WS
 import models._
+import play.api.Application
+import play.mvc.Call
 import se.radley.plugin.salat._
+import securesocial.core.{AuthenticationMethod, IdentityId}
 
 object Global extends GlobalSettings {
 
@@ -15,13 +18,29 @@ object Global extends GlobalSettings {
     com.mongodb.casbah.commons.conversions.scala.RegisterJodaTimeConversionHelpers()
     if (Author.count(DBObject(), Nil, Nil) == 0) {
       val mbs = Author.insert(Author(
-        name = "Michael Brunton-Spall",
-        username = "bruntonspall",
-        gravatar = "037360597d7b529eed1e61bb2329abc9")).get
+        identityId = IdentityId("a", "g"),
+        firstName = "Michael",
+        lastName = "Brunton-Spall",
+        fullName = "Michael Brunton-Spall",
+        email = Some("michael@brunton-spall.co.uk"),
+        avatarUrl = None,
+        oAuth1Info = None,
+        oAuth2Info = None,
+        passwordInfo = None,
+        authMethod = AuthenticationMethod.OAuth2,
+        username = "bruntonspall")).get
       val barry = Author.insert(Author(
-        name = "Barney McNuggin",
-        username = "mcnuggin",
-        gravatar = "00000000000000000000000000000000")).get
+        identityId = IdentityId("b", "g"),
+        firstName = "Barry",
+        lastName = "McNuggin",
+        fullName = "Barry McNuggin",
+        email = Some("barry@brunton-spall.co.uk"),
+        avatarUrl = None,
+        oAuth1Info = None,
+        oAuth2Info = None,
+        passwordInfo = None,
+        authMethod = AuthenticationMethod.OAuth2,
+        username = "mcnuggin")).get
 
       val foo = Category.insert(Category(name = "Foo", path = "foo")).get
       val bar = Category.insert(Category(name = "Bar", path = "bar")).get

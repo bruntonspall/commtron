@@ -1,4 +1,4 @@
-@(message: String, posts: Iterator[Post])
+@(message: String, posts: Iterator[Post])(implicit request: play.api.mvc.RequestHeader)
     @import tags._
 
 

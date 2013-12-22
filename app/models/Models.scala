@@ -1,5 +1,6 @@
 package models
 
+import _root_.java.security.MessageDigest
 import play.api.Play
 import org.joda.time.DateTime
 import models.mongoContext.context
@@ -10,14 +11,34 @@ import com.novus.salat.dao._
 import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 import play.api.Play.current
+import securesocial.core._
+import org.apache.commons.codec.binary.Hex
 
 case class Author(
-                   id: ObjectId = new ObjectId,
-                   name: String,
-                   username: String,
-                   gravatar: String)
+                  id: ObjectId = new ObjectId,
+                  username: String,
+                  identityId: IdentityId,
+                  firstName: String,
+                  lastName: String,
+                  fullName: String,
+                  email: Option[String],
+                  avatarUrl: Option[String],
+                  authMethod: AuthenticationMethod,
+                  oAuth1Info: Option[OAuth1Info],
+                  oAuth2Info: Option[OAuth2Info],
+                  passwordInfo: Option[PasswordInfo]
+) extends Identity {
+  def gravatar = {
+    val md = MessageDigest.getInstance("MD5")
+    val digest = email.map(_.toLowerCase).map(_.getBytes).map(md.digest).map(Hex.encodeHex)
+    digest.getOrElse("000000000000000")
+  }
+}
 
 object Author extends ModelCompanion[Author, ObjectId] {
+  def findByIdentity(id: IdentityId): Option[Identity] = dao.findOne(MongoDBObject("identityId.userId" -> id.userId))
+  def findByEmail(email: String): Option[Identity] = dao.findOne(MongoDBObject("email" -> email))
+
   def findOneByUsername(username: String) = Future {
     dao.findOne(MongoDBObject("username" -> username))
   }
@@ -61,7 +82,7 @@ case class Post(
 
   def commentCount = Post.dao.comments.countByParentId(id)
 
-  def comments = Post.dao.comments.findByParentId(id)
+  def comments = Post.dao.comments.findByParentId(id).$orderby(MongoDBObject("created" -> -1))
 
   def votes = votes_up - votes_down
 

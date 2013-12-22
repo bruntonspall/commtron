@@ -3,11 +3,20 @@
 # ~~~~
 
 # Home page
-GET        /                       controllers.Application.index
-GET        /:category              controllers.Application.category(category: String)
-GET        /:category/:post        controllers.Application.post(category: String, post: String)
-POST       /post/:post/:direction        controllers.Application.postVote(post: String, direction: String)
-POST       /comment/:comment/:direction        controllers.Application.commentVote(comment: String, direction: String)
+GET         /                                   controllers.Application.index
+GET         /c/:category                          controllers.Application.category(category: String)
+GET         /c/:category/:post                    controllers.Application.post(category: String, post: String)
+POST        /post/:post/:direction              controllers.Application.postVote(post: String, direction: String)
+POST        /comment/:comment/:direction        controllers.Application.commentVote(comment: String, direction: String)
 
 # Map static resources from the /public folder to the /assets URL path
-GET        /assets/*file           controllers.Assets.at(path="/public", file)
+GET         /assets/*file                       controllers.Assets.at(path="/public", file)
+
+# Login page
+GET         /login                              securesocial.controllers.LoginPage.login
+GET         /logout                             securesocial.controllers.LoginPage.logout
+
+# Providers entry points
+GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
+POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized

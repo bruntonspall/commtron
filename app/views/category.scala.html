@@ -1,4 +1,4 @@
-@(message: String, category: Category, posts: Iterator[Post])
+@(message: String, category: Category, posts: Iterator[Post])(implicit request: play.api.mvc.RequestHeader)
 @import tags._
 
     @sidebar = {

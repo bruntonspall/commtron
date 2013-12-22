@@ -1,4 +1,5 @@
-@(title: String)(sidebar: Html)(content: Html)
+@(title: String)(sidebar: Html)(content: Html)(implicit request: play.api.mvc.RequestHeader)
+@import securesocial.core.SecureSocial.currentUser
 <!DOCTYPE html>
 
 <html>
@@ -34,16 +35,15 @@
                         <button type="submit" class="btn btn-default">Search</button>
                     </form>
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a href="#"><span class="glyphicon glyphicon-bell" ></span> 1</a></li>
-                        <li><a href="#"><span class="glyphicon glyphicon-envelope" ></span> 3</a></li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Michael Brunton-Spall <b class="caret"></b></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">My Profile</a></li>
-                                <li class="divider"></li>
-                                <li><a href="#">Logout</a></li>
-                            </ul>
-                        </li>
+                        @currentUser match {
+                            case None => {
+                                <li><a href="/login">Login</a></li>
+                            }
+                            case Some(user) => {
+                                <li><a href="/u/@user.identityId.userId">@user.fullName</a></li>
+                                <li><a href="/logout">Logout</a></li>
+                        }
+                        }
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </nav>

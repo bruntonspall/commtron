@@ -1,1 +1,6 @@
 500:se.radley.plugin.salat.SalatPlugin
+9994:securesocial.core.DefaultAuthenticatorStore
+9995:securesocial.core.DefaultIdGenerator
+9997:securesocial.controllers.DefaultTemplatesPlugin
+9998:services.MyUserService
+10002:securesocial.core.providers.GoogleProvider
