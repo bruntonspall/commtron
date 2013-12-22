@@ -9,6 +9,6 @@
 
 @main("Welcome to Play")(sidebar) {
                 @for(post <- posts) {
-                    @renderPost(post)
+                    @renderPost(post, show_text = false)
                 }
 }

@@ -6,7 +6,7 @@
     }
 
 @main("Welcome to Play")(sidebar) {
-    @renderPost(post)
+    @renderPost(post, show_text = true)
     @for(comment <- post.comments) {
         @renderComment(comment)
     }

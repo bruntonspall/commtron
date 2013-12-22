@@ -1,5 +1,6 @@
-@(message: String, category: Category, posts: Iterator[Post])(implicit request: play.api.mvc.RequestHeader)
+@(category: Category, form: Form[PostTextForm])(implicit request: play.api.mvc.RequestHeader)
 @import tags._
+@import helper.twitterBootstrap._
 
     @sidebar = {
         <h1>Category @category.name</h1>
@@ -11,7 +12,9 @@
     }
 
 @main("Welcome to Play")(sidebar) {
-                @for(post <- posts) {
-                    @renderPost(post, show_text = false)
-                }
+    @helper.form(action = routes.Application.postText(category.path)) {
+        @helper.inputText(form("title"))
+        @helper.textarea(form("text"))
+        <button type="submit" id="submit" value="submit" class="btn btn-primary">Submit</button>
+    }
 }

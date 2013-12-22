@@ -68,10 +68,10 @@ case class Post(
                  id: ObjectId = new ObjectId,
                  title: String,
                  author_id: ObjectId,
-                 created: DateTime,
                  category_id: ObjectId,
-                 text: Option[String],
-                 link: Option[URL],
+                 created: DateTime = DateTime.now,
+                 text: Option[String] = None,
+                 link: Option[String] = None,
                  path: String = "",
                  votes_up: Long = 0,
                  votes_down: Long = 0) {
@@ -98,6 +98,9 @@ object Post extends ModelCompanion[Post, ObjectId] {
     dao.find(MongoDBObject("category_id" -> category_id)).$orderby(MongoDBObject("created" -> -1)).limit(10)
   }
 }
+
+case class PostTextForm(title: String, text: String)
+case class PostLinkForm(title: String, link: String)
 
 case class Comment(
                     id: ObjectId = new ObjectId,

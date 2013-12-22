@@ -1,0 +1,20 @@
+@(category: Category, form: Form[PostLinkForm])(implicit request: play.api.mvc.RequestHeader)
+@import tags._
+@import helper.twitterBootstrap._
+
+    @sidebar = {
+        <h1>Category @category.name</h1>
+        <form class="form">
+            <a class="btn btn-block btn-primary" href="/c/@category.path/add-link">Add link</a>
+            <a class="btn btn-block btn-primary" href="/c/@category.path/add-text">Add text</a>
+        </form>
+        <p>Some info about the category</p>
+    }
+
+@main("Welcome to Play")(sidebar) {
+    @helper.form(action = routes.Application.postLink(category.path)) {
+        @helper.inputText(form("link"), ('id -> "postLink"))
+        @helper.inputText(form("title"), ('id -> "linkTitle"), ('placeholder -> "Website Title"))
+        <button type="submit" id="submit" value="submit" class="btn btn-primary">Submit</button>
+    }
+}
