@@ -7,10 +7,7 @@ import models.Author
 
 class MyUserService(application: Application) extends UserServicePlugin(application){
   def find(id: IdentityId): Option[Identity] = {
-    Logger.info("Looking up user by id: "+id)
-    val user = Author.findByIdentity(id)
-    Logger.info("User was "+user)
-    user
+    Author.findByIdentity(id)
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = Author.findByEmail(email)

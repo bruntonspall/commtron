@@ -37,7 +37,7 @@
                     <ul class="nav navbar-nav navbar-right">
                         @currentUser match {
                             case None => {
-                                <li><a href="/login">Login</a></li>
+                                <li><a href="/authenticate/google">Login</a></li>
                             }
                             case Some(user) => {
                                 <li><a href="/u/@user.identityId.userId">@user.fullName</a></li>

@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.Logger
 import play.api.data._
 import play.api.data.Forms._
-import securesocial.core.SecureSocial
+import securesocial.core.SecureSocial.currentUser
 import java.net.URL
 
 
@@ -17,11 +17,12 @@ object Application extends Controller with securesocial.core.SecureSocial {
 
   val postTextForm = Form(mapping("title" -> nonEmptyText, "text" -> nonEmptyText)(PostTextForm.apply)(PostTextForm.unapply))
   val postLinkForm = Form(mapping("title" -> nonEmptyText, "link" -> nonEmptyText)(PostLinkForm.apply)(PostLinkForm.unapply))
+  val postCommentForm = Form(mapping("text" -> nonEmptyText, "parent" -> optional(text))(PostCommentForm.apply)(PostCommentForm.unapply))
 
 
   def index = UserAwareAction { implicit request =>
-    Logger.info("Logged in as user: "+request.user)
-    Ok(views.html.index("Index Page", Post.findByScore().toIterator))
+    Logger.info("User is: "+currentUser)
+    Ok(views.html.index(Post.findByScore().toIterator))
   }
 
   def category(category: String) = UserAwareAction.async { implicit request =>
@@ -30,7 +31,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
         catOpt <- catQuery
         cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
         posts <- Post.findByCategory(cat.id)
-    } yield Ok(views.html.category("Category Page", cat, posts.toIterator))
+    } yield Ok(views.html.category(cat, posts.toIterator))
   }
 
   def post(category: String, post: String) = UserAwareAction.async { implicit request =>
@@ -39,7 +40,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
       catOpt <- catQuery
       cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
       post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield Ok(views.html.post("", cat, post))
+    } yield Ok(views.html.post(cat, post, user=request.user.map { case a:Author => a}))
   }
 
   def addText(category: String) = SecuredAction.async { implicit request =>
@@ -122,6 +123,29 @@ object Application extends Controller with securesocial.core.SecureSocial {
     }
 
   }
+
+  def postComment(comment: String, post: String) = SecuredAction.async { implicit request =>
+      for {
+        post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
+      } yield {
+        postCommentForm.bindFromRequest.fold(
+          formWithErrors => {
+            Logger.error("Form has errors: "+formWithErrors)
+            BadRequest(views.html.post(post.category, post))
+          },
+          textForm => {
+            request.user match {
+              case user: Author => {
+                Comment.save(Comment(author_id = user.id, post_id = post.id, text=textForm.text))
+                Redirect("/c/"+post.category.path+"/"+post.id)
+              }
+              case _ => BadRequest(views.html.post(post.category, post))
+            }
+          }
+        )
+      }
+    }
+
   def commentVote(comment: String, direction: String) = UserAwareAction.async { implicit request =>
     for {
       comment <- Comment.findOneById(new ObjectId(comment)).map(Future.successful).getOrElse(Future.failed(new Exception))

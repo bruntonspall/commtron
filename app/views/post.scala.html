@@ -1,4 +1,4 @@
-@(message: String, category: Category, post: Post)(implicit request: play.api.mvc.RequestHeader)
+@(category: Category, post: Post, user: Option[Author] = None)(implicit request: play.api.mvc.RequestHeader)
 @import tags._
 @sidebar = {
         <h1>Category @category.name</h1>
@@ -7,6 +7,7 @@
 
 @main("Welcome to Play")(sidebar) {
     @renderPost(post, show_text = true)
+    @renderAddComment(post, user=user)
     @for(comment <- post.comments) {
         @renderComment(comment)
     }

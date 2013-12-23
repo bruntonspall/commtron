@@ -10,6 +10,7 @@ GET         /c/:category/add-text               controllers.Application.addText(
 POST        /c/:category/add-text               controllers.Application.postText(category: String)
 POST        /c/:category/add-link               controllers.Application.postLink(category: String)
 GET         /c/:category/:post                  controllers.Application.post(category: String, post: String)
+POST         /c/:category/:post/comment         controllers.Application.postComment(category: String, post: String)
 POST        /post/:post/:direction              controllers.Application.postVote(post: String, direction: String)
 POST        /comment/:comment/:direction        controllers.Application.commentVote(comment: String, direction: String)
 

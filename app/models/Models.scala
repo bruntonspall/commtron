@@ -143,6 +143,7 @@ object Post extends ModelCompanion[Post, ObjectId] {
 
 case class PostTextForm(title: String, text: String)
 case class PostLinkForm(title: String, link: String)
+case class PostCommentForm(text: String, parent: Option[String])
 
 case class Comment(
                     id: ObjectId = new ObjectId,
@@ -150,7 +151,7 @@ case class Comment(
                     author_id: ObjectId,
                     text: String,
                     created: DateTime = DateTime.now,
-                    votes_up: Long = 0,
+                    votes_up: Long = 1,
                     votes_down: Long = 0) {
   def author = Author.findOneById(author_id).get
   def votes = votes_up - votes_down
