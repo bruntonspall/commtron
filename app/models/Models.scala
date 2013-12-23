@@ -13,6 +13,9 @@ import ExecutionContext.Implicits.global
 import play.api.Play.current
 import securesocial.core._
 import org.apache.commons.codec.binary.Hex
+import com.novus.salat.annotations._
+import scala.math._
+import play.Logger
 
 case class Author(
                   id: ObjectId = new ObjectId,
@@ -84,18 +87,57 @@ case class Post(
 
   def comments = Post.dao.comments.findByParentId(id).$orderby(MongoDBObject("created" -> -1))
 
-  def votes = votes_up - votes_down
+  val votes = votes_up - votes_down
 
+  val sign = if (votes > 0) 1
+                      else if (votes < 0) -1
+                      else 0
+  @Persist val created_secs = created.getMillis / 1000
+  @Persist val adj_votes = sign * log10(max(abs(votes), 1))
 }
 
 object Post extends ModelCompanion[Post, ObjectId] {
+  val scoreQuery = MongoDBObject("$project" ->
+    MongoDBObject(
+      "_id" -> 1,
+      "title" -> 1,
+      "author_id" -> 1,
+      "category_id" -> 1,
+      "created" -> 1,
+      "text" -> 1,
+      "link" -> 1,
+      "path" -> 1,
+      "votes_up" -> 1,
+      "votes_down" -> 1,
+      "created_secs" -> 1,
+      "score" -> MongoDBObject("$add" -> List(
+        MongoDBObject("$divide" -> List(
+          MongoDBObject("$subtract" -> List("$created_secs", DateTime.now().getMillis/1000)),
+          43200)),
+        "$adj_votes"))
+    )
+  )
   val dao = new SalatDAO[Post, ObjectId](collection = DB.mongoCollection("posts")) {
     val comments = new ChildCollection[Comment, Int](collection = DB.mongoCollection("comments"),
       parentIdField = "post_id") {}
   }
 
-  def findByCategory(category_id: ObjectId): Future[SalatMongoCursor[Post]] = Future {
-    dao.find(MongoDBObject("category_id" -> category_id)).$orderby(MongoDBObject("created" -> -1)).limit(10)
+  def findByScore(): Iterable[Post] = {
+    DB.mongoCollection("posts").aggregate(
+      scoreQuery,
+      MongoDBObject("$sort" -> MongoDBObject("score" -> -1)),
+      MongoDBObject("$limit" -> 25)
+    ).results.map(dbo => dao._grater.asObject(dbo))
+  }
+
+
+  def findByCategory(category_id: ObjectId): Future[Iterable[Post]] = Future {
+    DB.mongoCollection("posts").aggregate(
+      MongoDBObject("$match" -> MongoDBObject("category_id" -> category_id)),
+      scoreQuery,
+      MongoDBObject("$sort" -> MongoDBObject("score" -> -1)),
+      MongoDBObject("$limit" -> 25)
+    ).results.map(dbo => dao._grater.asObject(dbo))
   }
 }
 

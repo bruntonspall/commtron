@@ -21,7 +21,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
 
   def index = UserAwareAction { implicit request =>
     Logger.info("Logged in as user: "+request.user)
-    Ok(views.html.index("Index Page", Post.findAll()))
+    Ok(views.html.index("Index Page", Post.findByScore().toIterator))
   }
 
   def category(category: String) = UserAwareAction.async { implicit request =>
@@ -30,7 +30,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
         catOpt <- catQuery
         cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
         posts <- Post.findByCategory(cat.id)
-    } yield Ok(views.html.category("Category Page", cat, posts))
+    } yield Ok(views.html.category("Category Page", cat, posts.toIterator))
   }
 
   def post(category: String, post: String) = UserAwareAction.async { implicit request =>
@@ -113,15 +113,11 @@ object Application extends Controller with securesocial.core.SecureSocial {
       post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
     } yield {
       // We need to register one vote per person, but we don't have user authentication yet
-      val field = direction match {
-        case "up" => "votes_up"
-        case "down" => "votes_down"
+      direction match {
+        case "up" => Post.save(post.copy(votes_up = post.votes_up + 1))
+        case "down" => Post.save(post.copy(votes_down = post.votes_down + 1))
       }
-      Post.update(
-        q = MongoDBObject("_id" -> post.id),
-        o = $inc (field -> 1),
-        upsert = false,
-        multi = false)
+
       Ok
     }
 
