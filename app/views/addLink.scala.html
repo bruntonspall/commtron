@@ -12,7 +12,7 @@
     }
 
 @main("Welcome to Play")(sidebar) {
-    @helper.form(action = routes.Application.postLink(category.path)) {
+    @helper.form(action = routes.PostController.postLink(category.path)) {
         @helper.inputText(form("link"), ('id -> "postLink"))
         @helper.inputText(form("title"), ('id -> "linkTitle"), ('placeholder -> "Website Title"))
         <button type="submit" id="submit" value="submit" class="btn btn-primary">Submit</button>

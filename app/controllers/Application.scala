@@ -3,26 +3,15 @@ package controllers
 import play.api.mvc._
 import models._
 import scala.concurrent.Future
-import com.mongodb.casbah.commons.MongoDBObject
-import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.Logger
-import play.api.data._
-import play.api.data.Forms._
-import securesocial.core.SecureSocial.currentUser
-import java.net.URL
 
 
 object Application extends Controller with securesocial.core.SecureSocial {
 
-  val postTextForm = Form(mapping("title" -> nonEmptyText, "text" -> nonEmptyText)(PostTextForm.apply)(PostTextForm.unapply))
-  val postLinkForm = Form(mapping("title" -> nonEmptyText, "link" -> nonEmptyText)(PostLinkForm.apply)(PostLinkForm.unapply))
-  val postCommentForm = Form(mapping("text" -> nonEmptyText, "parent" -> optional(text))(PostCommentForm.apply)(PostCommentForm.unapply))
-
-
-  def index = UserAwareAction { implicit request =>
-    Logger.info("User is: "+currentUser)
-    Ok(views.html.index(Post.findByScore().toIterator))
+  def index = UserAwareAction.async { implicit request =>
+    for {
+      posts <- Post.findByScore()
+    } yield Ok(views.html.index(posts.toIterator))
   }
 
   def category(category: String) = UserAwareAction.async { implicit request =>
@@ -34,134 +23,4 @@ object Application extends Controller with securesocial.core.SecureSocial {
     } yield Ok(views.html.category(cat, posts.toIterator))
   }
 
-  def post(category: String, post: String) = UserAwareAction.async { implicit request =>
-    val catQuery = Category.findByPath(category)
-    for {
-      catOpt <- catQuery
-      cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
-      post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield Ok(views.html.post(cat, post, user=request.user.map { case a:Author => a}))
-  }
-
-  def addText(category: String) = SecuredAction.async { implicit request =>
-    val catQuery = Category.findByPath(category)
-    for {
-      catOpt <- catQuery
-      cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      Ok(views.html.addText(cat, postTextForm))
-    }
-  }
-
-  def postText(category: String) = SecuredAction.async { implicit request =>
-    val catQuery = Category.findByPath(category)
-    for {
-      catOpt <- catQuery
-      cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      postTextForm.bindFromRequest.fold(
-        formWithErrors => {
-          BadRequest(views.html.addText(cat, formWithErrors))
-        },
-        textForm => {
-          request.user match {
-            case user: Author => {
-              Post.save(Post(title=textForm.title, author_id = user.id, category_id = cat.id, text = Some(textForm.text)))
-              Redirect(routes.Application.index)
-            }
-            case _ => BadRequest(views.html.addText(cat, postTextForm))
-          }
-        }
-      )
-    }
-  }
-
-  def addLink(category: String) = SecuredAction.async { implicit request =>
-    val catQuery = Category.findByPath(category)
-    for {
-      catOpt <- catQuery
-      cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      Ok(views.html.addLink(cat, postLinkForm))
-    }
-  }
-
-  def postLink(category: String) = SecuredAction.async { implicit request =>
-    val catQuery = Category.findByPath(category)
-    for {
-      catOpt <- catQuery
-      cat <- catOpt.map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      postLinkForm.bindFromRequest.fold(
-        formWithErrors => {
-          BadRequest(views.html.addLink(cat, formWithErrors))
-        },
-        textForm => {
-          request.user match {
-            case user: Author => {
-              Post.save(Post(title=textForm.title, author_id = user.id, category_id = cat.id, link = Some(textForm.link)))
-              Redirect(routes.Application.index)
-            }
-            case _ => BadRequest(views.html.addLink(cat, postLinkForm))
-          }
-        }
-      )
-    }
-  }
-
-  def postVote(post: String, direction: String) = UserAwareAction.async { implicit request =>
-    for {
-      post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      // We need to register one vote per person, but we don't have user authentication yet
-      direction match {
-        case "up" => Post.save(post.copy(votes_up = post.votes_up + 1))
-        case "down" => Post.save(post.copy(votes_down = post.votes_down + 1))
-      }
-
-      Ok
-    }
-
-  }
-
-  def postComment(comment: String, post: String) = SecuredAction.async { implicit request =>
-      for {
-        post <- Post.findOneById(new ObjectId(post)).map(Future.successful).getOrElse(Future.failed(new Exception))
-      } yield {
-        postCommentForm.bindFromRequest.fold(
-          formWithErrors => {
-            Logger.error("Form has errors: "+formWithErrors)
-            BadRequest(views.html.post(post.category, post))
-          },
-          textForm => {
-            request.user match {
-              case user: Author => {
-                Comment.save(Comment(author_id = user.id, post_id = post.id, text=textForm.text))
-                Redirect("/c/"+post.category.path+"/"+post.id)
-              }
-              case _ => BadRequest(views.html.post(post.category, post))
-            }
-          }
-        )
-      }
-    }
-
-  def commentVote(comment: String, direction: String) = UserAwareAction.async { implicit request =>
-    for {
-      comment <- Comment.findOneById(new ObjectId(comment)).map(Future.successful).getOrElse(Future.failed(new Exception))
-    } yield {
-      // We need to register one vote per person, but we don't have user authentication yet
-      val field = direction match {
-        case "up" => "votes_up"
-        case "down" => "votes_down"
-      }
-      Comment.update(
-        q = MongoDBObject("_id" -> comment.id),
-        o = $inc (field -> 1),
-        upsert = false,
-        multi = false)
-      Ok
-    }
-
-  }
 }

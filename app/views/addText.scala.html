@@ -12,7 +12,7 @@
     }
 
 @main("Welcome to Play")(sidebar) {
-    @helper.form(action = routes.Application.postText(category.path)) {
+    @helper.form(action = routes.PostController.postText(category.path)) {
         @helper.inputText(form("title"))
         @helper.textarea(form("text"))
         <button type="submit" id="submit" value="submit" class="btn btn-primary">Submit</button>

@@ -16,6 +16,7 @@ import org.apache.commons.codec.binary.Hex
 import com.novus.salat.annotations._
 import scala.math._
 import play.Logger
+import com.mongodb.casbah.commons.MongoDBObject
 
 case class Author(
                   id: ObjectId = new ObjectId,
@@ -94,6 +95,14 @@ case class Post(
                       else 0
   @Persist val created_secs = created.getMillis / 1000
   @Persist val adj_votes = sign * log10(max(abs(votes), 1))
+
+  def increment_votes() {
+    Post.save(this.copy(votes_up = votes_up + 1))
+  }
+
+  def decrement_votes() {
+    Post.save(this.copy(votes_down = votes_down + 1))
+  }
 }
 
 object Post extends ModelCompanion[Post, ObjectId] {
@@ -122,7 +131,7 @@ object Post extends ModelCompanion[Post, ObjectId] {
       parentIdField = "post_id") {}
   }
 
-  def findByScore(): Iterable[Post] = {
+  def findByScore(): Future[Iterable[Post]] = Future {
     DB.mongoCollection("posts").aggregate(
       scoreQuery,
       MongoDBObject("$sort" -> MongoDBObject("score" -> -1)),

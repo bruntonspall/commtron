@@ -1,4 +1,4 @@
-@(posts: Iterator[Post])(implicit request: play.api.mvc.RequestHeader)
+@(posts: Iterator[Post], user: Option[Author] = None)(implicit request: play.api.mvc.RequestHeader)
     @import tags._
 
 

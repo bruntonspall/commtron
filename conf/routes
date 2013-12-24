@@ -2,17 +2,25 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
+# Post Indexes
 GET         /                                   controllers.Application.index
 GET         /c/:category                        controllers.Application.category(category: String)
-GET         /c/:category/add-link               controllers.Application.addLink(category: String)
-GET         /c/:category/add-text               controllers.Application.addText(category: String)
-POST        /c/:category/add-text               controllers.Application.postText(category: String)
-POST        /c/:category/add-link               controllers.Application.postLink(category: String)
-GET         /c/:category/:post                  controllers.Application.post(category: String, post: String)
-POST         /c/:category/:post/comment         controllers.Application.postComment(category: String, post: String)
-POST        /post/:post/:direction              controllers.Application.postVote(post: String, direction: String)
-POST        /comment/:comment/:direction        controllers.Application.commentVote(comment: String, direction: String)
+
+# Add Posts
+GET         /c/:category/add-link               controllers.PostController.addLink(category: String)
+GET         /c/:category/add-text               controllers.PostController.addText(category: String)
+POST        /c/:category/add-text               controllers.PostController.postText(category: String)
+POST        /c/:category/add-link               controllers.PostController.postLink(category: String)
+
+# View post
+GET         /c/:category/:post                  controllers.PostController.post(category: String, post: String)
+
+# Voting
+POST        /post/:post/:direction              controllers.PostController.postVote(post: String, direction: String)
+POST        /comment/:comment/:direction        controllers.CommentController.commentVote(comment: String, direction: String)
+
+# Post Comment
+POST        /c/:category/:post/comment          controllers.CommentController.postComment(category: String, post: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                       controllers.Assets.at(path="/public", file)
@@ -22,6 +30,6 @@ GET         /login                              securesocial.controllers.LoginPa
 GET         /logout                             securesocial.controllers.LoginPage.logout
 
 # Providers entry points
-GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
-POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized
+GET         /authenticate/:provider             securesocial.controllers.ProviderController.authenticate(provider)
+POST        /authenticate/:provider             securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET         /not-authorized                     securesocial.controllers.ProviderController.notAuthorized
