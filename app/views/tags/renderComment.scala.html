@@ -1,0 +1,17 @@
+@(comment: Comment)
+<div class="row" style="margin-bottom: 15px">
+    <div class="col-md-offset-1 col-md-2" style="margin-top: 3px">
+        <div class="btn-group">
+            <button class="btn btn-xs vote vote-up" data-target="/comment/@comment.id/up"><span class="glyphicon glyphicon-thumbs-up"></span></button>
+            <button class="btn btn-xs votecount" disabled="disabled">@comment.votes</button>
+            <button class="btn btn-xs vote vote-down" data-target="/comment/@comment.id/down"><span class="glyphicon glyphicon-thumbs-down"></span></button>
+        </div>
+    </div>
+    <div class="col-md-1">
+        <img width="48" height="48" src="http://www.gravatar.com/avatar/@comment.author.gravatar?s=48" />
+    </div>
+    <div class="col-md-5">
+        <div class="titleline">@comment.author.fullName at @comment.created</div>
+        <p>@comment.text</p>
+    </div>
+</div>
